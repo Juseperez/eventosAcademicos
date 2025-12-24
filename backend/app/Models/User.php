@@ -45,4 +45,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Eventos favoritos del usuario.
+     */
+    public function eventosFavoritos()
+    {
+        return $this->belongsToMany(Evento::class, 'evento_user');
+    }
 }

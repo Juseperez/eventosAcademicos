@@ -16,4 +16,12 @@ class Evento extends Model
         'categoria',
         'descripcion'
     ];
+
+    /**
+     * Usuarios que han marcado este evento como favorito.
+     */
+    public function usuariosFavoritos()
+    {
+        return $this->belongsToMany(User::class, 'evento_user');
+    }
 }

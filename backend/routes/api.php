@@ -13,3 +13,9 @@ Route::get('/eventos', [EventoController::class, 'index']);
 Route::post('/eventos', [EventoController::class, 'store']);
 Route::put('/eventos/{id}', [EventoController::class, 'update']);
 Route::get('/eventos/search', [EventoController::class, 'search']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/eventos/{id}/favorite', [EventoController::class, 'addFavorite']);
+    Route::delete('/eventos/{id}/favorite', [EventoController::class, 'removeFavorite']);
+    Route::get('/eventos/favorites', [EventoController::class, 'getFavorites']);
+});

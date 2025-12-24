@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Evento;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EventoController extends Controller
 {
@@ -82,5 +84,48 @@ class EventoController extends Controller
         $eventos = $query->get();
 
         return response()->json($eventos);
+    }
+
+    // Agregar evento a favoritos
+    public function addFavorite($id)
+    {
+        $user = Auth::user();
+        $evento = Evento::find($id);
+
+        if (!$evento) {
+            return response()->json(['mensaje' => 'Evento no encontrado'], 404);
+        }
+
+        if ($user->eventosFavoritos()->where('evento_id', $id)->exists()) {
+            return response()->json(['mensaje' => 'El evento ya está en favoritos'], 400);
+        }
+
+        $user->eventosFavoritos()->attach($id);
+
+        return response()->json(['mensaje' => 'Evento agregado a favoritos']);
+    }
+
+    // Quitar evento de favoritos
+    public function removeFavorite($id)
+    {
+        $user = Auth::user();
+        $evento = Evento::find($id);
+
+        if (!$evento) {
+            return response()->json(['mensaje' => 'Evento no encontrado'], 404);
+        }
+
+        $user->eventosFavoritos()->detach($id);
+
+        return response()->json(['mensaje' => 'Evento removido de favoritos']);
+    }
+
+    // Listar eventos favoritos del usuario
+    public function getFavorites()
+    {
+        $user = Auth::user();
+        $favoritos = $user->eventosFavoritos;
+
+        return response()->json($favoritos);
     }
 }
