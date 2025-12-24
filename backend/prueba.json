@@ -1,0 +1,37 @@
+[
+    {
+        "nombre": "Conferencia de Matemáticas",
+        "fecha": "2025-12-25",
+        "lugar": "Auditorio Principal",
+        "categoria": "Ciencias",
+        "descripcion": "Una conferencia sobre avances en matemáticas puras."
+    },
+    {
+        "nombre": "Taller de Programación",
+        "fecha": "2025-12-26",
+        "lugar": "Sala de Computadoras",
+        "categoria": "Tecnología",
+        "descripcion": "Aprende a programar en Python."
+    },
+    {
+        "nombre": "Seminario de Historia",
+        "fecha": "2025-12-27",
+        "lugar": "Biblioteca Central",
+        "categoria": "Humanidades",
+        "descripcion": "Discusión sobre eventos históricos del siglo XX."
+    },
+    {
+        "nombre": "Expo de Arte",
+        "fecha": "2025-12-28",
+        "lugar": "Galería de Arte",
+        "categoria": "Arte",
+        "descripcion": "Exposición de obras de artistas locales."
+    },
+    {
+        "nombre": "Simposio de Biología",
+        "fecha": "2025-12-29",
+        "lugar": "Laboratorio de Biología",
+        "categoria": "Ciencias",
+        "descripcion": "Presentaciones sobre investigación en biología molecular."
+    }
+]
