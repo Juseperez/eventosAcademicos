@@ -12,7 +12,19 @@ class EventoController extends Controller
     // Listar eventos
     public function index()
     {
-        return response()->json(Evento::all());
+        $eventos = Evento::all();
+
+        if ($eventos->count() > 0) {
+            return response()->json($eventos);
+        }
+
+        $path = public_path('prueba.json');
+        if (file_exists($path)) {
+            $contents = json_decode(file_get_contents($path), true);
+            return response()->json($contents);
+        }
+
+        return response()->json([]);
     }
 
     // Crear evento (ESCRITURA)
@@ -127,5 +139,17 @@ class EventoController extends Controller
         $favoritos = $user->eventosFavoritos;
 
         return response()->json($favoritos);
+    }
+
+    // Mostrar detalle de un evento
+    public function show($id)
+    {
+        $evento = Evento::find($id);
+
+        if (!$evento) {
+            return response()->json(['mensaje' => 'Evento no encontrado'], 404);
+        }
+
+        return response()->json($evento);
     }
 }

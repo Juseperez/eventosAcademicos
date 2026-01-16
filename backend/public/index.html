@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Eventos Académicos - Visualización Dinámica</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+	<style>
+		body {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		}
+
+		.navbar {
+			background: rgba(255, 255, 255, 0.95);
+			backdrop-filter: blur(10px);
+			box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+		}
+
+		.card {
+			border: none;
+			border-radius: 15px;
+			box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+			transition: all 0.3s ease;
+			background: rgba(255, 255, 255, 0.95);
+			backdrop-filter: blur(10px);
+			opacity: 0;
+			transform: translateY(20px);
+			animation: fadeInUp 0.6s ease forwards;
+		}
+
+		.card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+		}
+
+		.card.fade-in {
+			animation: fadeInUp 0.6s ease forwards;
+		}
+
+		@keyframes fadeInUp {
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		.categoria-badge {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			padding: 5px 12px;
+			border-radius: 20px;
+			font-size: 0.8em;
+			font-weight: bold;
+			text-transform: uppercase;
+		}
+
+		.btn-favorito {
+			position: absolute;
+			top: 10px;
+			left: 10px;
+			background: rgba(255, 255, 255, 0.9);
+			border: none;
+			border-radius: 50%;
+			width: 40px;
+			height: 40px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: all 0.3s ease;
+			cursor: pointer;
+		}
+
+		.btn-favorito:hover {
+			background: #ff6b6b;
+			color: white;
+			transform: scale(1.1);
+		}
+
+		.btn-favorito.favorito {
+			background: #ff6b6b;
+			color: white;
+		}
+
+		.loading {
+			display: none;
+			text-align: center;
+			padding: 50px;
+		}
+
+		.spinner {
+			width: 50px;
+			height: 50px;
+			border: 5px solid #f3f3f3;
+			border-top: 5px solid #667eea;
+			border-radius: 50%;
+			animation: spin 1s linear infinite;
+			margin: 0 auto 20px;
+		}
+
+		@keyframes spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+
+		.search-container {
+			background: rgba(255, 255, 255, 0.95);
+			backdrop-filter: blur(10px);
+			border-radius: 15px;
+			padding: 30px;
+			margin-bottom: 30px;
+			box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+		}
+
+		.form-control {
+			border-radius: 10px;
+			border: 2px solid #e9ecef;
+			transition: all 0.3s ease;
+		}
+
+		.form-control:focus {
+			border-color: #667eea;
+			box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+		}
+
+		.categoria-filter {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 15px;
+		}
+
+		.categoria-btn {
+			padding: 8px 16px;
+			border: 2px solid #667eea;
+			background: transparent;
+			color: #667eea;
+			border-radius: 25px;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			font-size: 0.9em;
+		}
+
+		.categoria-btn:hover,
+		.categoria-btn.active {
+			background: #667eea;
+			color: white;
+		}
+
+		.stats-card {
+			background: rgba(255, 255, 255, 0.95);
+			backdrop-filter: blur(10px);
+			border-radius: 15px;
+			padding: 20px;
+			margin-bottom: 20px;
+			text-align: center;
+			box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+		}
+
+		.toast {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			background: #28a745;
+			color: white;
+			padding: 15px 20px;
+			border-radius: 10px;
+			box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+			z-index: 1000;
+			transform: translateX(400px);
+			transition: transform 0.3s ease;
+		}
+
+		.toast.show {
+			transform: translateX(0);
+		}
+
+		.empty-state {
+			text-align: center;
+			padding: 50px;
+			color: rgba(255, 255, 255, 0.8);
+		}
+
+		.empty-state i {
+			font-size: 4em;
+			margin-bottom: 20px;
+			opacity: 0.5;
+		}
+	</style>
+</head>
+<body>
+	<!-- Navbar -->
+	<nav class="navbar navbar-expand-lg navbar-light">
+		<div class="container">
+			<a class="navbar-brand fw-bold" href="#">
+				<i class="fas fa-calendar-alt text-primary me-2"></i>
+				Eventos Académicos
+			</a>
+			<div class="d-flex">
+				<span class="badge bg-primary me-2" id="totalEventos">0</span>
+				<span class="badge bg-success" id="eventosFavoritos">0</span>
+			</div>
+		</div>
+	</nav>
+
+	<div class="container mt-4">
+		<!-- Estadísticas -->
+		<div class="row mb-4">
+			<div class="col-md-3">
+				<div class="stats-card">
+					<h4 id="statsTotal">0</h4>
+					<p class="mb-0">Total Eventos</p>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="stats-card">
+					<h4 id="statsFavoritos">0</h4>
+					<p class="mb-0">Favoritos</p>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="stats-card">
+					<h4 id="statsCategorias">0</h4>
+					<p class="mb-0">Categorías</p>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="stats-card">
+					<h4 id="statsHoy">0</h4>
+					<p class="mb-0">Para Hoy</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Búsqueda y filtros -->
+		<div class="search-container">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="input-group">
+						<span class="input-group-text"><i class="fas fa-search"></i></span>
+						<input type="text" class="form-control" id="searchInput" placeholder="Buscar eventos...">
+					</div>
+				</div>
+				<div class="col-md-3">
+					<input type="date" class="form-control" id="dateFilter">
+				</div>
+				<div class="col-md-3">
+					<select class="form-control" id="sortSelect">
+						<option value="fecha">Ordenar por Fecha</option>
+						<option value="nombre">Ordenar por Nombre</option>
+						<option value="categoria">Ordenar por Categoría</option>
+					</select>
+				</div>
+			</div>
+			<div class="categoria-filter" id="categoriaFilter">
+				<!-- Los botones de categoría se generan dinámicamente -->
+			</div>
+		</div>
+
+		<!-- Loading -->
+		<div class="loading" id="loading">
+			<div class="spinner"></div>
+			<h4>Cargando eventos...</h4>
+		</div>
+
+		<!-- Contenedor de eventos -->
+		<div class="row" id="eventosContainer">
+			<!-- Los eventos se cargan dinámicamente aquí -->
+		</div>
+
+		<!-- Estado vacío -->
+		<div class="empty-state d-none" id="emptyState">
+			<i class="fas fa-calendar-times"></i>
+			<h3>No se encontraron eventos</h3>
+			<p>Intenta cambiar los filtros de búsqueda</p>
+		</div>
+
+		<!-- Toast de notificaciones -->
+		<div class="toast" id="toast">
+			<span id="toastMessage">Operación exitosa</span>
+		</div>
+	</div>
+
+	<!-- Scripts -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<!-- Modal para detalle de evento -->
+	<div class="modal fade" id="detalleModal" tabindex="-1" aria-labelledby="detalleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-lg modal-dialog-centered">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="detalleModalLabel">Detalle del Evento</h5>
+	        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+	      </div>
+	      <div class="modal-body">
+	        <h4 id="detalleNombre"></h4>
+	        <p class="text-muted" id="detalleFechaLugar"></p>
+	        <p><strong>Categoría:</strong> <span id="detalleCategoria"></span></p>
+	        <p id="detalleDescripcion"></p>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	<!-- Scripts -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+		class EventosApp {
+			constructor() {
+				this.eventos = [];
+				this.eventosFiltrados = [];
+				this.favoritos = new Set(JSON.parse(localStorage.getItem('favoritos') || '[]'));
+				this.categorias = new Set();
+
+				this.init();
+			}
+
+			init() {
+				this.bindEvents();
+				this.cargarEventos();
+			}
+
+			bindEvents() {
+				// Búsqueda en tiempo real
+				document.getElementById('searchInput').addEventListener('input', (e) => {
+					this.filtrarEventos();
+				});
+
+				// Filtro por fecha
+				document.getElementById('dateFilter').addEventListener('change', (e) => {
+					this.filtrarEventos();
+				});
+
+				// Ordenamiento
+				document.getElementById('sortSelect').addEventListener('change', (e) => {
+					this.ordenarEventos();
+				});
+			}
+
+			async cargarEventos() {
+				try {
+					this.mostrarLoading(true);
+
+					// Cargar directamente el archivo estático `prueba.json` desde la misma carpeta public
+					let response = null;
+					try {
+						response = await fetch('./prueba.json');
+					} catch (err) {
+						response = null;
+					}
+
+					if (!response || !response.ok) {
+						throw new Error('No se pudo leer prueba.json');
+					}
+
+					const data = await response.json();
+					this.eventos = data;
+					this.eventosFiltrados = [...this.eventos];
+
+					this.extraerCategorias();
+					this.actualizarEstadisticas();
+					this.renderizarEventos();
+					this.renderizarFiltrosCategoria();
+
+				} catch (error) {
+					console.error('Error:', error);
+					this.mostrarToast('No se encontraron eventos', 'error');
+
+					// Dejar listas vacías y mostrar estado vacío en la UI
+					this.eventos = [];
+					this.eventosFiltrados = [];
+					this.extraerCategorias();
+					this.actualizarEstadisticas();
+					this.renderizarEventos();
+				} finally {
+					this.mostrarLoading(false);
+				}
+			}
+            
+			extraerCategorias() {
+				this.categorias = new Set(this.eventos.map(evento => evento.categoria));
+			}
+
+			actualizarEstadisticas() {
+				document.getElementById('statsTotal').textContent = this.eventos.length;
+				document.getElementById('statsFavoritos').textContent = this.favoritos.size;
+				document.getElementById('statsCategorias').textContent = this.categorias.size;
+
+				// Contar eventos para hoy
+				const hoy = new Date().toISOString().split('T')[0];
+				const eventosHoy = this.eventos.filter(evento => evento.fecha === hoy).length;
+				document.getElementById('statsHoy').textContent = eventosHoy;
+
+				// Actualizar badges del navbar
+				document.getElementById('totalEventos').textContent = this.eventos.length;
+				document.getElementById('eventosFavoritos').textContent = this.favoritos.size;
+			}
+
+			renderizarFiltrosCategoria() {
+				const container = document.getElementById('categoriaFilter');
+				container.innerHTML = '';
+
+				this.categorias.forEach(categoria => {
+					const btn = document.createElement('button');
+					btn.className = 'categoria-btn';
+					btn.textContent = categoria;
+					btn.onclick = () => this.toggleFiltroCategoria(categoria, btn);
+					container.appendChild(btn);
+				});
+			}
+
+			toggleFiltroCategoria(categoria, btn) {
+				btn.classList.toggle('active');
+				this.filtrarEventos();
+			}
+
+			filtrarEventos() {
+				const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+				const fechaFiltro = document.getElementById('dateFilter').value;
+				const categoriasActivas = Array.from(document.querySelectorAll('.categoria-btn.active'))
+					.map(btn => btn.textContent);
+
+				this.eventosFiltrados = this.eventos.filter(evento => {
+					const coincideBusqueda = evento.nombre.toLowerCase().includes(searchTerm) ||
+										   evento.descripcion.toLowerCase().includes(searchTerm) ||
+										   evento.lugar.toLowerCase().includes(searchTerm);
+
+					const coincideFecha = !fechaFiltro || evento.fecha === fechaFiltro;
+
+					const coincideCategoria = categoriasActivas.length === 0 ||
+											categoriasActivas.includes(evento.categoria);
+
+					return coincideBusqueda && coincideFecha && coincideCategoria;
+				});
+
+				this.renderizarEventos();
+				this.actualizarEstadisticas();
+			}
+
+			ordenarEventos() {
+				const criterio = document.getElementById('sortSelect').value;
+
+				this.eventosFiltrados.sort((a, b) => {
+					switch(criterio) {
+						case 'fecha':
+							return new Date(a.fecha) - new Date(b.fecha);
+						case 'nombre':
+							return a.nombre.localeCompare(b.nombre);
+						case 'categoria':
+							return a.categoria.localeCompare(b.categoria);
+						default:
+							return 0;
+					}
+				});
+
+				this.renderizarEventos();
+			}
+
+			renderizarEventos() {
+				const container = document.getElementById('eventosContainer');
+				const emptyState = document.getElementById('emptyState');
+
+				if (this.eventosFiltrados.length === 0) {
+					container.innerHTML = '';
+					emptyState.classList.remove('d-none');
+					return;
+				}
+
+				emptyState.classList.add('d-none');
+				container.innerHTML = '';
+
+				this.eventosFiltrados.forEach((evento, index) => {
+					const card = this.crearCardEvento(evento, index);
+					container.appendChild(card);
+				});
+			}
+
+			crearCardEvento(evento, index) {
+				const col = document.createElement('div');
+				col.className = 'col-lg-4 col-md-6 mb-4';
+
+				const card = document.createElement('div');
+				card.className = 'card h-100';
+				card.style.animationDelay = `${index * 0.1}s`;
+
+				const badgeColor = this.getBadgeColor(evento.categoria);
+
+				card.innerHTML = `
+					<div class="card-body position-relative">
+						<button class="btn-favorito ${this.favoritos.has(evento.id) ? 'favorito' : ''}"
+								onclick="app.toggleFavorito(${evento.id}, this)">
+							<i class="fas fa-heart"></i>
+						</button>
+						<span class="badge categoria-badge" style="background: ${badgeColor}">
+							${evento.categoria}
+						</span>
+						<h5 class="card-title mt-3">${evento.nombre}</h5>
+						<p class="card-text text-muted">
+							<i class="fas fa-calendar me-2"></i>${this.formatearFecha(evento.fecha)}<br>
+							<i class="fas fa-map-marker-alt me-2"></i>${evento.lugar}
+						</p>
+						<p class="card-text">${evento.descripcion}</p>
+					</div>
+					<div class="card-footer bg-transparent border-0">
+						<div class="d-flex justify-content-between align-items-center">
+							<small class="text-muted">ID: ${evento.id}</small>
+							<button class="btn btn-outline-primary btn-sm" onclick="app.verDetalle(${evento.id})">
+								<i class="fas fa-eye me-1"></i>Ver Detalle
+							</button>
+						</div>
+					</div>
+				`;
+
+				col.appendChild(card);
+				return col;
+			}
+
+			getBadgeColor(categoria) {
+				const colores = {
+					'Matemáticas': '#FF6B6B',
+					'Física': '#4ECDC4',
+					'Informática': '#45B7D1',
+					'Inteligencia Artificial': '#96CEB4',
+					'default': '#667eea'
+				};
+				return colores[categoria] || colores.default;
+			}
+
+			formatearFecha(fecha) {
+				const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+				return new Date(fecha).toLocaleDateString('es-ES', opciones);
+			}
+
+			toggleFavorito(eventoId, btn) {
+				if (this.favoritos.has(eventoId)) {
+					this.favoritos.delete(eventoId);
+					btn.classList.remove('favorito');
+					this.mostrarToast('Removido de favoritos', 'success');
+				} else {
+					this.favoritos.add(eventoId);
+					btn.classList.add('favorito');
+					this.mostrarToast('Agregado a favoritos', 'success');
+				}
+
+				localStorage.setItem('favoritos', JSON.stringify([...this.favoritos]));
+				this.actualizarEstadisticas();
+			}
+
+			async verDetalle(eventoId) {
+				try {
+					// Buscar el evento cargado en memoria (no hacer llamadas de red)
+					const evento = this.eventos.find(e => String(e.id) === String(eventoId));
+					if (!evento) throw new Error('Evento no encontrado');
+
+					// Poblar y mostrar modal en lugar de alert
+					const detalleNombre = document.getElementById('detalleNombre');
+					const detalleFechaLugar = document.getElementById('detalleFechaLugar');
+					const detalleCategoria = document.getElementById('detalleCategoria');
+					const detalleDescripcion = document.getElementById('detalleDescripcion');
+
+					if (detalleNombre) detalleNombre.textContent = evento.nombre || '';
+					if (detalleFechaLugar) detalleFechaLugar.textContent = `${this.formatearFecha(evento.fecha)} ${evento.lugar ? ' — ' + evento.lugar : ''}`;
+					if (detalleCategoria) detalleCategoria.textContent = evento.categoria || '';
+					if (detalleDescripcion) detalleDescripcion.textContent = evento.descripcion || '';
+
+					const modalEl = document.getElementById('detalleModal');
+					if (modalEl && typeof bootstrap !== 'undefined') {
+						const modal = new bootstrap.Modal(modalEl);
+						modal.show();
+					}
+				} catch (err) {
+					console.error(err);
+					this.mostrarToast('No se pudo obtener detalle del evento', 'error');
+				}
+			}
+
+			mostrarLoading(mostrar) {
+				document.getElementById('loading').style.display = mostrar ? 'block' : 'none';
+			}
+
+			mostrarToast(mensaje, tipo = 'success') {
+				const toast = document.getElementById('toast');
+				const toastMessage = document.getElementById('toastMessage');
+
+				toastMessage.textContent = mensaje;
+				toast.className = `toast ${tipo}`;
+
+				toast.classList.add('show');
+				setTimeout(() => {
+					toast.classList.remove('show');
+				}, 3000);
+			}
+		}
+
+		// Inicializar la aplicación cuando el DOM esté listo
+		document.addEventListener('DOMContentLoaded', () => {
+			window.app = new EventosApp();
+		});
+	</script>
+</body>
+</html>
